@@ -8,13 +8,14 @@ import { parseAllSessions } from './parser.js'
 import { loadPricing } from './models.js'
 import { providers } from './providers/index.js'
 
-type Period = 'today' | 'week' | 'month' | '30days'
+type Period = 'today' | 'week' | 'month' | '30days' | '90days'
 
-const PERIODS: Period[] = ['today', 'week', '30days', 'month']
+const PERIODS: Period[] = ['today', 'week', '30days', '90days', 'month']
 const PERIOD_LABELS: Record<Period, string> = {
   today: 'Today',
   week: '7 Days',
   '30days': '30 Days',
+  '90days': '90 Days',
   month: 'This Month',
 }
 
@@ -86,6 +87,7 @@ function getDateRange(period: Period): { start: Date; end: Date } {
     case 'today': return { start: new Date(now.getFullYear(), now.getMonth(), now.getDate()), end }
     case 'week': return { start: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7), end }
     case '30days': return { start: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30), end }
+    case '90days': return { start: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 90), end }
     case 'month': return { start: new Date(now.getFullYear(), now.getMonth(), 1), end }
   }
 }
@@ -433,8 +435,10 @@ function StatusBar({ width, showProvider }: { width: number; showProvider?: bool
         <Text color={ORANGE} bold>2</Text>
         <Text dimColor> week   </Text>
         <Text color={ORANGE} bold>3</Text>
-        <Text dimColor> 30 days   </Text>
+        <Text dimColor> 30d   </Text>
         <Text color={ORANGE} bold>4</Text>
+        <Text dimColor> 90d   </Text>
+        <Text color={ORANGE} bold>5</Text>
         <Text dimColor> month</Text>
         {showProvider && (
           <>
@@ -569,7 +573,8 @@ function InteractiveDashboard({ initialProjects, initialPeriod, initialProvider,
     } else if (input === '1') switchPeriod('today')
     else if (input === '2') switchPeriod('week')
     else if (input === '3') switchPeriod('30days')
-    else if (input === '4') switchPeriod('month')
+    else if (input === '4') switchPeriod('90days')
+    else if (input === '5') switchPeriod('month')
   })
 
   if (loading) {
