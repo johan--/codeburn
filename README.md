@@ -149,6 +149,23 @@ Requires [SwiftBar](https://github.com/swiftbar/SwiftBar) (`brew install --cask 
 
 **Pricing**: Fetched from [LiteLLM](https://github.com/BerriAI/litellm) model prices (auto-cached 24h at `~/.cache/codeburn/`). Handles input, output, cache write, cache read, and web search costs. Fast mode multiplier for Claude. Hardcoded fallbacks for all Claude and GPT-5 models to prevent fuzzy matching mispricing.
 
+## Reading the dashboard
+
+CodeBurn surfaces the data, you read the story. A few patterns worth knowing:
+
+| Signal you see | What it might mean |
+|---|---|
+| Cache hit < 80% | System prompt or context isn't stable, or caching not enabled |
+| Lots of `Read` calls per session | Agent re-reading same files, missing context |
+| Low 1-shot rate (Coding 30%) | Agent struggling with edits, retry loops |
+| Opus 4.6 dominating cost on small turns | Overpowered model for simple tasks |
+| `dispatch_agent` / `task` heavy | Sub-agent fan-out, expected or excessive |
+| No MCP usage shown | Either you don't use MCP servers, or your config is broken |
+| Bash dominated by `git status`, `ls` | Agent exploring instead of executing |
+| Conversation category dominant | Agent talking instead of doing |
+
+These are starting points, not verdicts. A 60% cache hit on a single experimental session is fine. A persistent 60% cache hit across weeks of work is a config issue.
+
 ## How it reads data
 
 **Claude Code** stores session transcripts as JSONL at `~/.claude/projects/<sanitized-path>/<session-id>.jsonl`. Each assistant entry contains model name, token usage (input, output, cache read, cache write), tool_use blocks, and timestamps.
