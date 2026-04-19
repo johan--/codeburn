@@ -702,9 +702,17 @@ function InteractiveDashboard({ initialProjects, initialPeriod, initialProvider,
   if (loading) {
     return (
       <Box flexDirection="column" width={dashWidth}>
-        <PeriodTabs active={period} providerName={activeProvider} showProvider={multipleProviders} />
-        <Panel title="CodeBurn" color={ORANGE} width={dashWidth}><Text dimColor>Loading {PERIOD_LABELS[period]}...</Text></Panel>
-        <StatusBar width={dashWidth} showProvider={multipleProviders} view="dashboard" findingCount={0} optimizeAvailable={false} compareAvailable={false} />
+        <PeriodTabs active={period} providerName={activeProvider} showProvider={view !== 'compare' && multipleProviders} />
+        {view === 'compare'
+          ? <Box flexDirection="column" paddingX={2} paddingY={1}>
+              <Box flexDirection="column" borderStyle="round" borderColor={ORANGE} paddingX={1}>
+                <Text bold color={ORANGE}>Model Comparison</Text>
+                <Text> </Text>
+                <Text dimColor>Loading {PERIOD_LABELS[period]} model data...</Text>
+              </Box>
+            </Box>
+          : <Panel title="CodeBurn" color={ORANGE} width={dashWidth}><Text dimColor>Loading {PERIOD_LABELS[period]}...</Text></Panel>}
+        {view !== 'compare' && <StatusBar width={dashWidth} showProvider={multipleProviders} view="dashboard" findingCount={0} optimizeAvailable={false} compareAvailable={false} />}
       </Box>
     )
   }
