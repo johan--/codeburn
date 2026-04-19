@@ -143,6 +143,7 @@ function ComparisonResults({ modelA, modelB, rows, onBack }: ComparisonResultsPr
     { label: 'Total cost', valueA: formatCost(modelA.cost), valueB: formatCost(modelB.cost) },
     { label: 'Days of data', valueA: String(daysOfData(modelA.firstSeen, modelA.lastSeen)), valueB: String(daysOfData(modelB.firstSeen, modelB.lastSeen)) },
     { label: 'Edit turns', valueA: modelA.editTurns.toLocaleString(), valueB: modelB.editTurns.toLocaleString() },
+    { label: 'Self-corrections', valueA: modelA.selfCorrections.toLocaleString(), valueB: modelB.selfCorrections.toLocaleString() },
   ]
 
   return (
