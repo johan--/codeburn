@@ -144,19 +144,20 @@ export function computeComparison(a: ModelStats, b: ModelStats): ComparisonRow[]
 }
 
 const SELF_CORRECTION_PATTERNS = [
-  /\bI('m| am) sorry\b/i,
   /\bmy mistake\b/i,
-  /\bmy apolog/i,
-  /\bI made (a |an )?(error|mistake)\b/i,
-  /\bI was wrong\b/i,
   /\bmy bad\b/i,
+  /\bmy apolog/i,
   /\bI apologize\b/i,
-  /\bsorry about that\b/i,
-  /\bsorry for (the|that|this)\b/i,
-  /\bI should have\b/i,
-  /\bI shouldn't have\b/i,
+  /\bI was wrong\b/i,
+  /\bI was incorrect\b/i,
+  /\bI made (a |an )?(error|mistake)\b/i,
   /\bI incorrectly\b/i,
   /\bI mistakenly\b/i,
+  /\bthat was (incorrect|wrong|an error)\b/i,
+  /\blet me correct that\b/i,
+  /\bI need to correct\b/i,
+  /\byou're right[.,]? I/i,
+  /\bsorry about that\b/i,
 ]
 
 function extractText(content: unknown): string {
@@ -168,16 +169,20 @@ function extractText(content: unknown): string {
     .join(' ')
 }
 
+function isCompactFile(name: string): boolean {
+  return name.includes('compact')
+}
+
 async function collectJsonlFiles(sessionDir: string): Promise<string[]> {
   const entries = await readdir(sessionDir, { withFileTypes: true })
   const files: string[] = []
   for (const entry of entries) {
-    if (entry.isFile() && entry.name.endsWith('.jsonl')) {
+    if (entry.isFile() && entry.name.endsWith('.jsonl') && !isCompactFile(entry.name)) {
       files.push(join(sessionDir, entry.name))
     } else if (entry.isDirectory() && entry.name === 'subagents') {
       const subEntries = await readdir(join(sessionDir, entry.name), { withFileTypes: true })
       for (const sub of subEntries) {
-        if (sub.isFile() && sub.name.endsWith('.jsonl')) {
+        if (sub.isFile() && sub.name.endsWith('.jsonl') && !isCompactFile(sub.name)) {
           files.push(join(sessionDir, entry.name, sub.name))
         }
       }
@@ -188,6 +193,7 @@ async function collectJsonlFiles(sessionDir: string): Promise<string[]> {
 
 export async function scanSelfCorrections(projectDirs: string[]): Promise<Map<string, number>> {
   const counts = new Map<string, number>()
+  const seen = new Set<string>()
 
   for (const dir of projectDirs) {
     let entries
@@ -200,7 +206,7 @@ export async function scanSelfCorrections(projectDirs: string[]): Promise<Map<st
     const allFiles: string[] = []
 
     for (const entry of entries) {
-      if (entry.isFile() && entry.name.endsWith('.jsonl')) {
+      if (entry.isFile() && entry.name.endsWith('.jsonl') && !isCompactFile(entry.name)) {
         allFiles.push(join(dir, entry.name))
       } else if (entry.isDirectory()) {
         try {
@@ -234,12 +240,17 @@ export async function scanSelfCorrections(projectDirs: string[]): Promise<Map<st
         const rec = parsed as Record<string, unknown>
         if (!rec || typeof rec !== 'object' || rec['type'] !== 'assistant') continue
 
+        const ts = rec['timestamp']
         const msg = rec['message']
         if (msg === null || typeof msg !== 'object') continue
 
         const msgRec = msg as Record<string, unknown>
         const model = msgRec['model']
         if (typeof model !== 'string' || model === '<synthetic>') continue
+
+        const dedupeKey = `${model}:${ts}`
+        if (seen.has(dedupeKey)) continue
+        seen.add(dedupeKey)
 
         const text = extractText(msgRec['content'])
         if (SELF_CORRECTION_PATTERNS.some(p => p.test(text))) {

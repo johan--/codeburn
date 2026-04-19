@@ -213,14 +213,14 @@ describe('computeComparison', () => {
   })
 })
 
-function jsonlLine(type: string, model: string, text: string): string {
+function jsonlLine(type: string, model: string, text: string, timestamp = '2026-04-15T10:00:00Z'): string {
   if (type === 'assistant') {
     return JSON.stringify({
-      type: 'assistant', timestamp: '2026-04-15T10:00:00Z',
+      type: 'assistant', timestamp,
       message: { model, content: [{ type: 'text', text }], id: `msg-${Math.random()}`, usage: { input_tokens: 0, output_tokens: 0 } },
     })
   }
-  return JSON.stringify({ type: 'user', timestamp: '2026-04-15T10:00:00Z', message: { role: 'user', content: text } })
+  return JSON.stringify({ type: 'user', timestamp, message: { role: 'user', content: text } })
 }
 
 describe('scanSelfCorrections', () => {
@@ -307,12 +307,12 @@ describe('scanSelfCorrections', () => {
     await mkdir(sessionB)
 
     await writeFile(join(sessionA, 'a.jsonl'), [
-      jsonlLine('assistant', 'opus-4-6', 'I was wrong.'),
-      jsonlLine('assistant', 'opus-4-6', 'My bad!'),
+      jsonlLine('assistant', 'opus-4-6', 'I was wrong.', '2026-04-15T10:00:00Z'),
+      jsonlLine('assistant', 'opus-4-6', 'My bad!', '2026-04-15T10:01:00Z'),
     ].join('\n') + '\n')
 
     await writeFile(join(sessionB, 'b.jsonl'), [
-      jsonlLine('assistant', 'opus-4-6', 'I apologize.'),
+      jsonlLine('assistant', 'opus-4-6', 'I apologize.', '2026-04-15T10:02:00Z'),
     ].join('\n') + '\n')
 
     const result = await scanSelfCorrections([tmpDir])
@@ -340,11 +340,11 @@ describe('scanSelfCorrections', () => {
       await mkdir(sessionB)
 
       await writeFile(join(sessionA, 'a.jsonl'), [
-        jsonlLine('assistant', 'sonnet-4-6', 'My mistake.'),
+        jsonlLine('assistant', 'sonnet-4-6', 'My mistake.', '2026-04-15T10:00:00Z'),
       ].join('\n') + '\n')
 
       await writeFile(join(sessionB, 'b.jsonl'), [
-        jsonlLine('assistant', 'sonnet-4-6', 'I was wrong.'),
+        jsonlLine('assistant', 'sonnet-4-6', 'I was wrong.', '2026-04-15T10:01:00Z'),
       ].join('\n') + '\n')
 
       const result = await scanSelfCorrections([tmpDir, dir2])
