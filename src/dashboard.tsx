@@ -649,7 +649,6 @@ function InteractiveDashboard({ initialProjects, initialPeriod, initialProvider,
 
   const reloadData = useCallback(async (p: Period, prov: string) => {
     setLoading(true)
-    setOptimizeResult(null)
     const range = getDateRange(p)
     const data = filterProjectsByName(await parseAllSessions(range, prov), projectFilter, excludeFilter)
     setProjects(data)
